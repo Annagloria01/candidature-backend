@@ -22,7 +22,7 @@ public class JobApplication { //tabella database
 
     @NotBlank
     @NotNull
-   @Column(name = "company_name", nullable = false, length = 100)
+    @Column(name = "company_name", nullable = false, length = 100)
     @Size(min = 3, max = 100, message = "il titolo deve avere tra i 3 e i 100 caratteri")
     private String companyName;
 
