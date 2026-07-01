@@ -14,73 +14,56 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.model.JobApplication;
-import com.example.demo.repository.JobApplicationRepository;
+import com.example.demo.service.JobApplicationService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/job-applications")
 public class JobApplicationController {
 
-    private final JobApplicationRepository jobApplicationRepository;
+    private final JobApplicationService jobApplicationService;
 
-    public JobApplicationController(JobApplicationRepository jobApplicationRepository) {
-        this.jobApplicationRepository = jobApplicationRepository;
+    // Constructor Injection sul Service
+    public JobApplicationController(JobApplicationService jobApplicationService) {
+        this.jobApplicationService = jobApplicationService;
     }
 
-    //GET
+    // GET
     @GetMapping
     public List<JobApplication> getAllJobApplications() {
-        return jobApplicationRepository.findAll();
+        return jobApplicationService.findAll();
     }
 
-    //GET by ID
+    // GET by ID
     @GetMapping("/{id}")
     public ResponseEntity<JobApplication> getById(@PathVariable Integer id) {
-        // Cerchiamo la candidatura. Se c'è la restituisce, altrimenti lancia un errore controllato
-        Optional<JobApplication> jobApplication = jobApplicationRepository.findById(id);
+        Optional<JobApplication> jobApplication = jobApplicationService.findById(id);
         return jobApplication.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //PUT
+    // PUT
     @PutMapping("/{id}")
-    public ResponseEntity<JobApplication> update(@PathVariable Integer id, @RequestBody JobApplication applicationDetails) {
-        Optional<JobApplication> existing = jobApplicationRepository.findById(id);
-
-        if (existing.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // Prendiamo la candidatura originale dal database
-        JobApplication jobApplication = existing.get();
-
-        // Aggiorniamo i singoli campi uno a uno
-        jobApplication.setCompanyName(applicationDetails.getCompanyName());
-        jobApplication.setJobTitle(applicationDetails.getJobTitle());
-        jobApplication.setJobDescription(applicationDetails.getJobDescription());
-        jobApplication.setJobLocation(applicationDetails.getJobLocation());
-        jobApplication.setApplicationStatus(applicationDetails.getApplicationStatus());
-        jobApplication.setHrContactedName(applicationDetails.getHrContactedName());
-        jobApplication.setNotes(applicationDetails.getNotes());
-        // Se non vuoi far modificare la data, ti basta non mettere il setter della data qui!
-
-        // Salviamo l'oggetto aggiornato
-        JobApplication updated = jobApplicationRepository.save(jobApplication);
+    public ResponseEntity<JobApplication> update(@PathVariable Integer id, @Valid @RequestBody JobApplication applicationDetails) {
+        JobApplication updated = jobApplicationService.update(id, applicationDetails);
         return ResponseEntity.ok(updated);
     }
 
-    //POST
+    // POST
     @PostMapping
-    public ResponseEntity<JobApplication> create(@RequestBody JobApplication jobApplication) {
-        JobApplication saved = jobApplicationRepository.save(jobApplication);
+    public ResponseEntity<JobApplication> create(@Valid @RequestBody JobApplication jobApplication) {
+        JobApplication saved = jobApplicationService.save(jobApplication);
         return ResponseEntity.status(201).body(saved);
     }
 
+    // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!jobApplicationRepository.existsById(id)) {
+        if (!jobApplicationService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
-        jobApplicationRepository.deleteById(id);
+        jobApplicationService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }
